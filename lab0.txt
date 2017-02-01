@@ -1,0 +1,4 @@
+// CS350c (1): Explain how the next line computes the
+    // throughput. Specifically, give the units of each of the
+    // variables (size, stride, cycles, Mhz) and explain how the
+    // resulting expression gives a result in MB/s.
