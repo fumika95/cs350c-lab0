@@ -40,7 +40,7 @@
 #define SLEEPTIME 4 // time to sleep when estimating the clock frequency
 #define VERBOSE 0
 
-int data[MAXELEMS]; // the array we'll be traversing
+volatile int data[MAXELEMS]; // the array we'll be traversing
 
 void init_data(int *data, int n);
 void test(int elems, int stride);
@@ -91,7 +91,19 @@ void init_data(int *data, int n)
     int i;
 
     for (i = 0; i < n; i++)
-	data[i] = 1;
+	data[i] = i;
+}
+
+int helper_read(volatile int* val, int elems, int stride){
+    int i;
+    for (i = 0; i < elems; i += stride) // skip stride elements in the
+      *(val) += data[i];  
+
+    return *(val);
+}
+
+volatile int* helper_id(volatile int * val){
+    return val;
 }
 
 void test(int elems, int stride) /* The test function */
@@ -99,7 +111,7 @@ void test(int elems, int stride) /* The test function */
 // Reads elems elements from the data array, with a particular stride,
 // the number of elements to "jump" after each access.
 {
-    int i, result = 0;
+     volatile int i, result = 0;
 
     // We want to prevent the C compiler from realizing that the
     // values we are reading aren't actually being used for anything;
@@ -114,15 +126,17 @@ void test(int elems, int stride) /* The test function */
     // to be.
 
     volatile int sink; // Assigning the summation of the values we
-                       // read to this variable helps prevent the
+                       // read to this variable helps prevens the
                        // compiler from ``skipping'' all these
                        // meaningless reads.
 
     for (i = 0; i < elems; i += stride) // skip stride elements in the
       result += data[i];                // array each time
 
-    sink = result; // So compiler doesn't optimize away the loop.
+    *(helper_id(&result)) = helper_read(&result, elems, stride); // So compiler doesn't optimize away the loop.
 }
+
+
 
 double run(int size, int stride, double Mhz)
 

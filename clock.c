@@ -76,7 +76,7 @@ double mhz(int verbose, int sleeptime)
 // Estimate the clock rate by measuring the cycles that elapse while
 // sleeping for sleeptime seconds
 {
-    double rate;
+    volatile double rate;
 
     start_counter();
     sleep(sleeptime);

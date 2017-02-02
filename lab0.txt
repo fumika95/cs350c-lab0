@@ -2,3 +2,77 @@ CS350c (1): Explain how the next line computes the throughput.
 Specifically, give the units of each of the
 variables (size, stride, cycles, Mhz) and explain how the
 resulting expression gives a result in MB/s.
+
+
+	Units for each variable
+	- size: MB
+	- stride: no unit
+	- cyclesL no unit
+	- Mhz: 1/s
+
+	=> so (size/stride)/(cycles/Mhz) = MB/s
+
+CS 350c: Explain what the code in this section is doing by
+    	answering the following questions:
+
+    (2) What is the role of C-variable pos, and what is its value
+        set to by the if/else statements?
+
+        The variable pos keep track of the index in the array "value" where stores the minimum(best) cycle
+        
+        The variable pos will be just set to the next available position in the array "value" if we have not got enough amount of samples(which is kbtest, which is set to 3). 
+        Otherwise it will just replace the last value in the array(the worst result in the array), set pos to the last index, and then sort the array after line 81
+
+
+    (3) How does this code keep the array named "values" sorted?
+        What sorting algorithm is (implicitly) used?
+
+        Each time when a new value is added, the code check if that value is greater than anyone else in the array and swap the position if it is, one by one in the while loop.
+        The algorithm used here is almost same as insertion sort(which is performed each time an element is added).
+
+
+CS350c (4): Explain what this code is doing. What is the ``asm''
+	directive? What is the meaning of rdtscp?  What values end up in
+	the hi and lo variables after running this code?
+
+	The code reads the cycle counter, and move results to the two address passed in as arguments
+
+	asm is probably a function that accespt some arguments to execute some x86 assembly code.
+	rdtscp is an instruction that reads in 64-bit time-stamp counter value into EDX:EAX(we ignored ecx here which stores the IA32_TSC_AUX value)
+	So the hi and lo will store the time-stamp counter value since the value in edx and eax was moved into hi and lo.
+
+
+CS350c (5): What is being computed below? ``result'' should end
+    up with the number of cycles that have elapsed since the
+    nitial call to start_counter(), but how does it attain that
+    value?  Be sure to explain for what each of the following seven
+    variables are being used:
+
+    Variables:  ncyc_hi, ncyc_lo, cyc_hi, cyc_lo, hi, lo, borrow
+
+
+    ncyc_lo: lower 32bits of the new(current) cycle counter
+    ncyc_hi: upper 32bits of the new(current) cycle counter
+    cyc_hi: upper 32bits of the cycle counter at the point of the initial call
+    cyc_lo: lower 32bits of the cycle counter at the point of the initial call
+
+    hi: upper 32bits of the difference between current and starting cycle counter
+    lo: lower 32bits of the difference between current and starting cycle counter
+    borrow: either 1 or 0, indicating if hi needs to be reduced by one since the lower 32bits might borrow from 		hi
+
+    Since the cycle counter should be 64bits in total, and it is stored separately in two 32bits variable it needs to subtract separately(ncyc_hi - cyc_hi, and ncyc_lo - cyc_lo). However, when ncyc_lo is smaller than cyc_lo, it needs to borrow one from hi(which is the bit 33 in the actual 64bit value). After that, we can figure out the result by shifting the hi 32 bits and add up lo.
+
+
+Extra credit question:
+
+When I run the program on my max(which uses LLVM version 8.0.00), the Mhz was also 0, so probably need some volatile work around for the function calculating the Mhz.
+
+I have found a paper about many Volatiles error in compiler: https://www.cs.utah.edu/~regehr/papers/emsoft08-preprint.pdf
+
+It is talking about all the old versions of various compilers, but almost all of them was buggy with volatile according to this paper. There were solutions for some of the bug, but since the paper was pablished long ago, they should have been fixed. I tried helper methods work-aournd solution but did not work.
+
+So overall, I could not figure out what exactly the bug was!!!!! 
+
+
+
+
